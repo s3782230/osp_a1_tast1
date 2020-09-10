@@ -113,6 +113,10 @@ Process* Queue::pop_top_process() {
     return popped_process;
 }
 
+Process* Queue::get_top_process() {
+    return this->ready_queue->at(0);
+}
+
 Process* Queue::get_process_at_index(int index) {
     std::vector<Process*>* queue = this->ready_queue.get();
     Process* process = NULL;
@@ -173,4 +177,8 @@ void Queue::print_list() {
     for(it = this->ready_queue.get()->begin(); it != this->ready_queue.get()->end(); ++it) {
         std::cout << (*it)->get_process_id() << std::endl;
     }
+}
+
+int Queue::get_num_finished_processes() {
+    return this->completed_processes->size();
 }

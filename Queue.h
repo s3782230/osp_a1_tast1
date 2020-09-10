@@ -31,12 +31,16 @@ class Queue {
         Process* pop_process(int process_id);
         bool is_empty();
         int get_num_processes();
+
+        int get_num_finished_processes();
         
 
         /*
         *Pops the top process of the ready queue and returns ir
         */
         Process* pop_top_process();
+
+        Process* get_top_process();
 
         /*
         returns true if process is completed and removed

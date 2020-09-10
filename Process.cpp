@@ -6,6 +6,10 @@ Process::Process(int process_id, int burst_time, int arrival_time) {
     this->burst_time = burst_time;
     this->original_burst_time = burst_time;
     this->arrival_time = arrival_time;
+
+    this->rr_burst_time = burst_time;
+    this->rr_waiting_time = waiting_time;
+
 }
 
 //Constructor for priority based
@@ -52,6 +56,22 @@ int Process::get_arrival_time() {
 
 bool Process::get_is_active() {
     return this->is_active;
+}
+
+void Process::decrement_rr_burst_time(double value) {
+    this->rr_burst_time = rr_burst_time - value;
+}
+
+void Process::increment_rr_waiting_time(double value) {
+    this->rr_waiting_time = rr_waiting_time + value;
+}
+
+double Process::get_rr_burst_time() {
+    return this->rr_burst_time;
+}
+
+double Process::get_rr_waiting_time() {
+    return this->rr_waiting_time;
 }
 
 void Process::set_is_active(bool is_active) {

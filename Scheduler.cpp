@@ -62,15 +62,14 @@ void Scheduler::first_come_first_serve_scheduler() {
 }
 
 void Scheduler::smallest_job_first_scheduler() {
+    Process* shortest_job = NULL;
     //While the processes still exist within the ready queue or waiting queue...
     while(ready_queue->get_num_processes() > 0 || process_list->size() > 0) {        
         //Loop through process list and add processes to ready queue if waiting time is 0, then remove from process_list
         move_process_to_ready_queue(clock_ticks);      
         
         if(!ready_queue->is_empty()) {
-            //Find the shortest job
-            Process* shortest_job = NULL;
-
+            //Find the shortest job only if there is no active job currently
             if(shortest_job == NULL) {
                 for(int index = 0; index < ready_queue->get_num_processes(); index++) {
                     Process* current_process = ready_queue->get_process_at_index(index);
@@ -96,11 +95,9 @@ void Scheduler::smallest_job_first_scheduler() {
 
             //if recently decremented process now has a burst time of 0, then remove it
             if(shortest_job->get_burst_time() == 0) {
-
-                //std::cout << "Process [" << shortest_job->get_process_id() << "] has been completed at [" << clock_ticks << "] ticks." << std::endl;
-                //std::cout << "At [" << clock_ticks << "] ticks, process [" << shortest_job->get_process_id() << "] was completed" << std::endl;
-
                 this->ready_queue->delete_from_list(shortest_job->get_process_id());
+                //Set the current job to null when it is completed.
+                shortest_job = NULL;
             }
         }
         tick();
@@ -110,42 +107,90 @@ void Scheduler::smallest_job_first_scheduler() {
 
 void Scheduler::round_robin_scheduler() {
 
-    int current_quantum = this->quantum;
+    double current_quantum = 0;
+    Process* current;
+
+    Process* process;
+    bool context_switch_applied = false;
+    bool is_first_process = false;
+
+    /////////
+    int current_id = -1;
+
 
     while(ready_queue->get_num_processes() > 0 || process_list->size() > 0) { 
-        //Loop through process list and add processes to ready queue if waiting time is 0, then remove from process_list
-        move_process_to_ready_queue(clock_ticks);  
 
-        Process* current_process = this->ready_queue->get_process_at_index(0);
+        this->move_process_to_ready_queue(clock_ticks);
 
-        //If the current process is not active, switch in the process, set it as active and add context switch time to overhead
-        if(current_process->get_is_active() == false) {
-            current_process->set_is_active(true);
-        }
-        
-        //Increment burst time of active process
-        current_process->decrement_burst_time();
 
-        //Increment waiting time for waiting processes.
-        this->increment_waiting_time_for_processes();
+        /* If scheduler is empty and there is no running process, stop i guess */
 
-        //If the current process is completed, remove it from the ready queue and reset the current quantum back to default
-        if(this->ready_queue->get_process_at_index(0)->get_burst_time() == 0) {
-            this->ready_queue->delete_from_list(current_process->get_process_id());
-            current_quantum = this->quantum;
-        } 
-        //Else if the current process is NOT completed, decrement the current quantum. if the current quantum equals 0, reset it back to default and move the 
-        //current process to the end of the ready queue.
-        else {
-            current_quantum--;
-            if(current_quantum == 0) {
-                current_quantum = this->quantum;
-                ready_queue->move_process_to_back_of_queue(current_process->get_process_id());
-                current_process->set_is_active(false);
-            }
+        //Then...
+        if(ready_queue->get_num_finished_processes() == 0 && current == nullptr) {
+            is_first_process = true;
         }
 
-        
+
+
+        /*
+            Check if maximum quantum has been used on current process. if it has, move 
+            it to the end of the ready queue
+        */
+
+       if(current_id != -1 && current_quantum == quantum) {
+            ready_queue->move_process_to_back_of_queue(current_id);
+            current_id = -1;
+            current_quantum = 0;
+       } 
+
+
+       /* if there is no current proces running, schedule a new process to begin */
+       if(current_id == -1 && !ready_queue->is_empty()) {
+           /* the new process to begin running is the first in the queue */
+           current_id = ready_queue->get_process_at_index(0)->get_process_id();
+           //ready_queue->get_process_at_index(0)->set_is_active(true);
+           /* remove the running process from the ready queue */
+
+
+            //i dont actually remove processes from ready queue, so this line was causing errors
+            // ready_queue->pop_top_process();
+
+
+           /*
+                apply context switch to waiting time of current process if:
+                1. the current process was not the only process in the ready queue
+                2. the current process was not the first process
+           */
+          if(!ready_queue->is_empty() && is_first_process == false) {
+              //current->increment_rr_waiting_time(context_switch_time);
+              ready_queue->get_process_at_index(0)->increment_rr_waiting_time(context_switch_time);
+              context_switch_applied = true;
+          }
+       }
+
+       if(context_switch_applied == true) {
+           //current->decrement_rr_burst_time(1 - context_switch_time);
+           ready_queue->get_process_at_index(0)->decrement_rr_burst_time(1 - context_switch_time);
+       }
+       else {
+           //current->decrement_rr_burst_time(1);
+           ready_queue->get_top_process()->decrement_rr_burst_time(1);
+       }
+
+       current_quantum = current_quantum + 1;
+       /* if the burst time of the current proces is 0, that means 
+        the process has finished running and can be removed 
+        */
+       if(ready_queue->get_process_at_index(0)->get_rr_burst_time() <= 0) {
+            //ready_queue->move_process_to_back_of_queue(current->get_process_id());
+            //ready_queue->move_process_to_back_of_queue(current_id);
+            ready_queue->delete_from_list(current_id);
+            current_id = -1;
+       }
+
+       /* Increase the waiting time of each process still in the ready queue by one clock tick */
+
+       this->increment_waiting_time_for_processes(1, current_id);
         tick();
     }
 
@@ -162,6 +207,18 @@ void Scheduler::increment_waiting_time_for_processes() {
             ready_queue->get_process_at_index(index)->increment_waiting_time();
         }
         
+    }
+
+}
+
+void Scheduler::increment_waiting_time_for_processes(double value, int current_id) {
+
+    for(int index = 0; index < this->ready_queue->get_num_processes(); index++) {
+        //If the process is not the active process, increment its waiting time.
+
+        if(ready_queue->get_process_at_index(index)->get_process_id() != current_id) {
+            ready_queue->get_process_at_index(index)->increment_rr_waiting_time(value);
+        }
     }
 
 }

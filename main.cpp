@@ -14,8 +14,8 @@ std::vector<Process*>* initialise_processes(std::string file_dir);
 int main(int argc, char *argv[]) {
     std::string file_dir = "./files/processes-3";
     bool fcfs = false;
-    bool sjf = true;
-    bool rr = false;
+    bool sjf = false;
+    bool rr = true;
     bool print_to_console = false;
 
     std::string output_file_name = "fcfs.txt";
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 
     for(int index = 0; index < completed_processes->size(); index++) {
         outfile << "ProcessID: [" << completed_processes->at(index)->get_process_id() <<
-                    "], Waiting Time [" << completed_processes->at(index)->get_waiting_time() << 
+                    "], Waiting Time [" << completed_processes->at(index)->get_rr_waiting_time() << 
                     "], Turnaround Time: [" << completed_processes->at(index)->calculate_turnaround_time() << "]" << std::endl;
     }
 
