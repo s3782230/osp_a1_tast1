@@ -3,55 +3,64 @@
 #include <vector>
 
 #include <stdlib.h>
+#include <cstdlib>
+
+
+#include <iostream>
+
+#include <fstream>
+#include <sstream>
 
 #include "./Queue.h"
 #include "./Scheduler.h"
 
 std::vector<Process*>* initialise_processes(std::string file_dir);
 
-
+/*
+    1. 0 - 10
+    2. 11 - 20
+    3. 21 - 50
+    4. 51 - 100
+    5. 101 - 200
+    6. 201 - 500
+    7. 501 - 1000
+    8. 1001 - 1500
+    9. 1501 - 2000
+*/
+double waiting_time_stats[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+double turnaroung_time_stats[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 int main(int argc, char *argv[]) {
     std::string file_dir = "./files/processes-3";
     bool fcfs = false;
     bool sjf = false;
-    bool rr = true;
-    bool print_to_console = false;
+    bool rr = false;
 
     std::string output_file_name = "fcfs.txt";
-    // ./cpuscheduler {file directory} {schedule} {print to console y/n}
-    // int number_of_desired_arguments = 4;
-    // if(argc != number_of_desired_arguments) {
-    //     std::cout << "There are an incorrect number of arguments." << std::endl;
-    //     return EXIT_FAILURE;
-    // } else {
-    //     file_dir = argv[1];
-    //     std::cout << argv[2] << std::endl;
-    //     std::string algorithm = argv[2];
+    // ./cpuscheduler {file directory} {schedule}
+    int number_of_desired_arguments = 2;
+    if(argc != number_of_desired_arguments) {
+        std::cout << "There are an incorrect number of arguments." << std::endl;
+        return EXIT_FAILURE;
+    } else {
 
-    //     if(algorithm == "fcfs") {
-    //         std::cout << "hi" << std::endl;
-    //     } else {
-    //         std::cout << "yea na" << std::endl;
-    //     }
+        std::string algorithm = argv[1];
 
-    //     if(argv[2] == "fcfs") {
-    //         fcfs = true;
-    //         output_file_name = "fcfs.txt";
+        if(algorithm == "fcfs") {
+            fcfs = true;
+            output_file_name = "fcfs.txt";
             
-    //     } else if (argv[2] == "sjb") {
-    //         sjf = true;
-    //         output_file_name = "sjf.txt";
-    //     } else if (argv[2] == "rr") {
-    //         rr = true;
-    //         output_file_name = "rr.txt";
-    //     }
-
-    //     if(argv[3] == "y") {
-    //         print_to_console = true;
-    //     }
-
-    // }
+        } else if (algorithm == "sjf") {
+            sjf = true;
+            output_file_name = "sjf.txt";
+        } else if (algorithm == "rr") {
+            rr = true;
+            output_file_name = "rr.txt";
+        } else {
+            std::cout << "A valid algorithm was not selected." << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
 
     
 
@@ -77,15 +86,22 @@ int main(int argc, char *argv[]) {
     
 
     //Print to file
-    std::ofstream outfile (output_file_name);
+    std::ofstream outfile ("output.txt");
     std::vector<Process*>* completed_processes = ready_queue->get_completed_processes();
 
     for(int index = 0; index < completed_processes->size(); index++) {
-        outfile << "ProcessID: [" << completed_processes->at(index)->get_process_id() <<
-                    "], Waiting Time [" << completed_processes->at(index)->get_rr_waiting_time() << 
-                    "], Turnaround Time: [" << completed_processes->at(index)->calculate_turnaround_time() << "]" << std::endl;
-    }
 
+        if(rr) {
+            outfile << "ProcessID: [" << completed_processes->at(index)->get_process_id() <<
+                    "], Waiting Time [" << completed_processes->at(index)->get_rr_waiting_time() << 
+                    "], Turnaround Time: [" << completed_processes->at(index)->calculate_rr_turnaround_time() << "]" << std::endl;              
+
+        } else {
+            outfile << "ProcessID: [" << completed_processes->at(index)->get_process_id() <<
+                    "], Waiting Time [" << completed_processes->at(index)->get_waiting_time() << 
+                    "], Turnaround Time: [" << completed_processes->at(index)->calculate_turnaround_time() << "]" << std::endl;
+        }
+    }
     return EXIT_SUCCESS;
 }
 
@@ -93,8 +109,8 @@ int main(int argc, char *argv[]) {
 std::vector<Process*>* initialise_processes(std::string file_dir) {
     std::vector<Process*>* process_list = new std::vector<Process*>();
     
-    std::ifstream processes;
-    processes.open(file_dir, std::ios::in);
+    std::ifstream processes(file_dir);
+    //processes.open(file_dir, std::ios::in);
 
     std::string line;
 
@@ -109,12 +125,14 @@ std::vector<Process*>* initialise_processes(std::string file_dir) {
         /*
         *WARNING!! VALUES ARE HARDCODED AT THE MOMENT. ONLY WORKS IF THERE ARE THREE COLUMNS. BE SURE TO CHANGE LATER!!!!!!!!
         */
-
-        Process* process = new Process(std::stoi(vstrings.at(0)), std::stoi(vstrings.at(1)), std::stoi(vstrings.at(2)));
+       //int test = atoi(vstrings.at(0).c_str())
+        Process* process = new Process(std::atoi(vstrings.at(0).c_str()), std::atoi(vstrings.at(1).c_str()), std::atoi(vstrings.at(2).c_str()));
         process_list->push_back(process);
 
         vstrings.clear();        
     }
+
+    processes.close();
 
     return process_list;
 }

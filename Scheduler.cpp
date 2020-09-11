@@ -3,6 +3,16 @@
 Scheduler::Scheduler(std::vector<Process*>* process_list, Queue* ready_queue) {
     this->ready_queue = ready_queue;
     this->process_list = process_list;
+
+    this->clock_ticks = 0;
+        
+    /* shortest job first */
+    this->active_process_id = -1;
+
+    /* Round Robin */
+    this->first_process_pickedup = false;
+    this->context_switch_time = 0.1;
+    this->quantum = 2;
 }
 
 Scheduler::~Scheduler() {
@@ -111,7 +121,7 @@ void Scheduler::round_robin_scheduler() {
     Process* current;
 
     Process* process;
-    bool context_switch_applied = false;
+    bool added_context_switch = false;
     bool is_first_process = false;
 
     /////////
@@ -122,14 +132,10 @@ void Scheduler::round_robin_scheduler() {
 
         this->move_process_to_ready_queue(clock_ticks);
 
-
-        /* If scheduler is empty and there is no running process, stop i guess */
-
         //Then...
-        if(ready_queue->get_num_finished_processes() == 0 && current == nullptr) {
+        if(ready_queue->get_num_finished_processes() == 0 && current == NULL) {
             is_first_process = true;
         }
-
 
 
         /*
@@ -164,11 +170,11 @@ void Scheduler::round_robin_scheduler() {
           if(!ready_queue->is_empty() && is_first_process == false) {
               //current->increment_rr_waiting_time(context_switch_time);
               ready_queue->get_process_at_index(0)->increment_rr_waiting_time(context_switch_time);
-              context_switch_applied = true;
+              added_context_switch = true;
           }
        }
 
-       if(context_switch_applied == true) {
+       if(added_context_switch == true) {
            //current->decrement_rr_burst_time(1 - context_switch_time);
            ready_queue->get_process_at_index(0)->decrement_rr_burst_time(1 - context_switch_time);
        }

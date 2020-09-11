@@ -7,19 +7,19 @@ class Process {
 
     private:
 
-        int process_id = 0;
-        int burst_time = 0;
-        int original_burst_time = 0;
-        int arrival_time = 0;
-        int priority = 0;
-        int waiting_time = 0;
-        int turnaround_time = 0;
+        int process_id;
+        int burst_time;
+        int original_burst_time;
+        int arrival_time;
+        int priority;
+        int waiting_time;
+        int turnaround_time;
 
-        bool is_active = false;
+        bool is_active;
 
         /* round robin */
-        double rr_waiting_time = 0;
-        double rr_burst_time = 0;
+        double rr_waiting_time;
+        double rr_burst_time;
 
     public:
         /*
@@ -46,6 +46,7 @@ class Process {
         void set_is_active(bool is_active);
 
         int calculate_turnaround_time();
+        double calculate_rr_turnaround_time();
 
         void decrement_rr_burst_time(double value);
         void increment_rr_waiting_time(double value);

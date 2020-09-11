@@ -10,6 +10,10 @@ Process::Process(int process_id, int burst_time, int arrival_time) {
     this->rr_burst_time = burst_time;
     this->rr_waiting_time = waiting_time;
 
+    this->waiting_time = 0;
+    this->turnaround_time = 0;
+    this->is_active = false;
+
 }
 
 //Constructor for priority based
@@ -26,6 +30,10 @@ Process::~Process() {
 
 int Process::calculate_turnaround_time() {
     return original_burst_time + waiting_time;
+}
+
+double Process::calculate_rr_turnaround_time() {
+    return original_burst_time + rr_waiting_time;
 }
 
 void Process::decrement_burst_time() {

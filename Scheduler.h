@@ -6,19 +6,19 @@
 class Scheduler {
 
     private:
-        int clock_ticks = 0;
+        int clock_ticks;
 
         std::vector<Process*>* process_list;
 
         Queue* ready_queue;
         
         /* shortest job first */
-        int active_process_id = -1;
+        int active_process_id;
 
         /* Round Robin */
-        bool first_process_pickedup = false;
-        double context_switch_time = 0.1;
-        int quantum = 2;
+        bool first_process_pickedup;
+        double context_switch_time;
+        int quantum;
         
 
         

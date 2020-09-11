@@ -3,20 +3,19 @@
 
 #include <vector> 
 #include <iterator>
-#include <memory> 
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
+
 
 #include "./Process.h"
 
 class Queue {
 
     private:
-        std::shared_ptr<std::vector<Process*>> ready_queue = std::make_shared<std::vector<Process*>>();
+        //std::shared_ptr<std::vector<Process*>> ready_queue = std::make_shared<std::vector<Process*>>();
 
-        std::vector<Process*>* completed_processes = new std::vector<Process*>;
+        //std::vector<Process*>* completed_processes = new std::vector<Process*>;
+
+        std::vector<Process*>* ready_queue;
+        std::vector<Process*>* completed_processes;
 
         std::vector<Process*>::iterator it;
     public:
